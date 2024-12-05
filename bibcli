@@ -5,6 +5,14 @@ import os
 import subprocess
 import sys
 
+def add_arguments(parser):
+    parser.add_argument("--output", help="Output directory", required=True)
+    parser.add_argument("--config", help="Config file", required=False)
+    parser.add_argument("--type", help="Image type", required=True)
+    parser.add_argument("--rootfs", help="Root filesystem", required=False)
+    parser.add_argument("--dry-run", help="Dry run", action="store_true")
+    parser.add_argument("image", help="Image ref")
+
 
 def main():
     if os.geteuid() != 0:
@@ -12,14 +20,10 @@ def main():
             "bibcli is not run as root, this might be an issue without podman being configured to use a (rootful) machine by default",
             file=sys.stderr,
         )
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", help="Output directory", required=True)
-    parser.add_argument("--config", help="Config file", required=False)
-    parser.add_argument("--type", help="Image type", required=True)
-    parser.add_argument("--rootfs", help="Root filesystem", required=False)
-    parser.add_argument("--dry-run", help="Dry run", action="store_true")
-    parser.add_argument("image", help="Image ref")
+    subparsers = parser.add_subparsers(dest="command")
+    build_parser = subparsers.add_parser("build", help="Build an image")
+    add_arguments(build_parser)
 
     args = parser.parse_args()
 
