@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 
+
 def add_arguments(parser):
     parser.add_argument("--output", help="Output directory", required=True)
     parser.add_argument("--config", help="Config file", required=False)
@@ -25,6 +26,9 @@ def main():
     build_parser = subparsers.add_parser("build", help="Build an image")
     add_arguments(build_parser)
 
+    manifest_parser = subparsers.add_parser("manifest", help="Genereate a manifest")
+    add_arguments(manifest_parser)
+
     args = parser.parse_args()
 
     # Always pass an absolute path to podman, otherwise it might create a volume, instead of bind-mount
@@ -42,6 +46,10 @@ def main():
     if args.rootfs:
         extra_bib_flags += ["--rootfs", args.rootfs]
 
+    bib_cmd = "build"
+    if args.command == "manifest":
+        bib_cmd = "manifest"
+
     cmd = (
         [
             "podman",
@@ -58,7 +66,9 @@ def main():
             "--pull=newer",
         ]
         + extra_run_flags
-        + ["quay.io/centos-bootc/bootc-image-builder", "--local", "--type", args.type]
+        + ["quay.io/centos-bootc/bootc-image-builder"]
+        + [bib_cmd]
+        + ["--local", "--type", args.type]
         + extra_bib_flags
         + [
             args.image,
