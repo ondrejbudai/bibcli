@@ -79,10 +79,9 @@ def main():
         print(" ".join(cmd))
         return 0
 
-    subprocess.run(
+    return subprocess.run(
         cmd,
-        check=True,
-    )
+    ).returncode
 
 
 if __name__ == "__main__":
