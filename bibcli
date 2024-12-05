@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+
+import argparse
+import os
+import subprocess
+import sys
+
+
+def main():
+    if os.geteuid() != 0:
+        print("bibcli is not run as root, this might be an issue without podman being configured to use a (rootful) machine by default", file=sys.stderr)
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", help="Output directory", required=True)
+    parser.add_argument("--config", help="Config file", required=False)
+    parser.add_argument("--type", help="Image type", required=True)
+    parser.add_argument("--rootfs", help="Root filesystem", required=False)
+    parser.add_argument("image", help="Image ref")
+
+    args = parser.parse_args()
+
+    # Always pass an absolute path to podman, otherwise it might create a volume, instead of bind-mount
+    output = os.path.abspath(args.output)
+    if not os.path.exists(output):
+        os.makedirs(output)
+
+    extra_run_flags = []
+    if args.config:
+        extra_run_flags += ["-v", f"{args.config}:/config.toml"]
+
+    extra_bib_flags = []
+    if args.rootfs:
+        extra_bib_flags += ["--rootfs", args.rootfs]
+
+    subprocess.run(
+        [
+            "podman",
+            "run",
+            "--rm",
+            "--privileged",
+            "--security-opt",
+            "label=disable",
+            "-it",
+            "-v",
+            "/var/lib/containers/storage:/var/lib/containers/storage",
+            "-v",
+            f"{output}:/output",
+            "--pull=newer",
+        ]
+        + extra_run_flags
+        + ["quay.io/centos-bootc/bootc-image-builder", "--local", "--type", args.type]
+        + extra_bib_flags
+        + [
+            args.image,
+        ],
+        check=True,
+    )
+
+
+if __name__ == "__main__":
+    sys.exit(main())
