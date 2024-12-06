@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+DEFAULT_BIB_IMAGE = "quay.io/centos-bootc/bootc-image-builder"
+
 
 def add_arguments(parser):
     parser.add_argument("--output", help="Output directory", required=True)
@@ -13,6 +15,11 @@ def add_arguments(parser):
     parser.add_argument("--rootfs", help="Root filesystem", required=False)
     parser.add_argument("--dry-run", help="Dry run", action="store_true")
     parser.add_argument("--pull", help="Passed directly to podman run")
+    parser.add_argument(
+        "--bib-img",
+        help=f"Bootc image builder image ({DEFAULT_BIB_IMAGE})",
+        default=DEFAULT_BIB_IMAGE,
+    )
     parser.add_argument("image", help="Image ref")
 
 
@@ -70,8 +77,7 @@ def main():
             "--pull=newer",
         ]
         + extra_run_flags
-        + ["quay.io/centos-bootc/bootc-image-builder"]
-        + [bib_cmd]
+        + [args.bib_img, bib_cmd]
         + ["--local", "--type", args.type]
         + extra_bib_flags
         + [
