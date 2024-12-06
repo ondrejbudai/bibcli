@@ -12,6 +12,7 @@ def add_arguments(parser):
     parser.add_argument("--type", help="Image type", required=True)
     parser.add_argument("--rootfs", help="Root filesystem", required=False)
     parser.add_argument("--dry-run", help="Dry run", action="store_true")
+    parser.add_argument("--pull", help="Passed directly to podman run")
     parser.add_argument("image", help="Image ref")
 
 
@@ -41,6 +42,9 @@ def main():
     extra_run_flags = []
     if config:
         extra_run_flags += ["-v", f"{config}:/config.toml"]
+
+    if args.pull:
+        extra_run_flags += ["--pull", args.pull]
 
     extra_bib_flags = []
     if args.rootfs:
